@@ -1,10 +1,8 @@
+import type { PropsWithChildren } from "react";
+
 import { Header } from "@/components/header";
 
-type Props = {
-  children: React.ReactNode;
-};
-
-const DashboardLayout = ({ children }: Props) => {
+const DashboardLayout = ({ children }: PropsWithChildren) => {
   return (
     <>
       <Header />
