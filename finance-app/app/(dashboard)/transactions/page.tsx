@@ -1,9 +1,9 @@
 "use client";
 
-import { Loader2, Plus } from "lucide-react";
+import { Download, Loader2, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-
+import { saveAs } from "file-saver";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,6 +72,15 @@ const TransactionsPage = () => {
     });
   };
 
+  const downloadSampleCSV = () => {
+    const fileName = "data.csv";
+    const filePath = `/${fileName}`;
+
+    fetch(filePath)
+      .then((response) => response.blob())
+      .then((blob) => saveAs(blob, fileName));
+  };
+
   const isDisabled =
     transactionsQuery.isLoading || deleteTransactions.isPending;
 
@@ -118,12 +127,18 @@ const TransactionsPage = () => {
           <div className="flex flex-col items-center gap-x-2 gap-y-2 lg:flex-row">
             <Button
               size="sm"
+              onClick={downloadSampleCSV}
+              className="w-full lg:w-auto"
+            >
+              <Download className="mr-2 size-4" /> Upload Format
+            </Button>
+            <Button
+              size="sm"
               onClick={newTransaction.onOpen}
               className="w-full lg:w-auto"
             >
               <Plus className="mr-2 size-4" /> Add new
             </Button>
-
             <UploadButton onUpload={onUpload} />
           </div>
         </CardHeader>
