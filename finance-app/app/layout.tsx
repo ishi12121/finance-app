@@ -22,7 +22,7 @@ const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={inter.className}>
+        <body className={`${inter.className} custom-scrollbar`}>
           <QueryProviders>
             <SheetProvider />
             <Toaster richColors theme="light" />
