@@ -130,7 +130,7 @@ const TransactionsPage = () => {
               onClick={downloadSampleCSV}
               className="w-full lg:w-auto"
             >
-              <Download className="mr-2 size-4" /> Upload Format
+              <Download className="mr-2 size-4" /> CSV format
             </Button>
             <Button
               size="sm"

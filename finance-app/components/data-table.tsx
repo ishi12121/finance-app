@@ -12,9 +12,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Trash } from "lucide-react";
+import { Trash, Download } from "lucide-react";
 import * as React from "react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +25,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useConfirm } from "@/hooks/use-confirm";
+import { saveAs } from "file-saver";
+import Papa from "papaparse";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -69,6 +70,15 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  const handleDownloadCSV = () => {
+    const selectedRows = table
+      .getFilteredSelectedRowModel()
+      .rows.map((row) => row.original);
+    const csv = Papa.unparse(selectedRows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, "selected_rows.csv");
+  };
+
   return (
     <div>
       <ConfirmDialog />
@@ -84,23 +94,35 @@ export function DataTable<TData, TValue>({
         />
 
         {table.getFilteredSelectedRowModel().rows.length > 0 && (
-          <Button
-            disabled={disabled}
-            size="sm"
-            variant="outline"
-            className="ml-auto text-xs font-normal"
-            onClick={async () => {
-              const ok = await confirm();
+          <div className="ml-auto flex gap-2">
+            <Button
+              disabled={disabled}
+              size="sm"
+              variant="outline"
+              className="text-xs font-normal"
+              onClick={async () => {
+                const ok = await confirm();
 
-              if (ok) {
-                onDelete(table.getFilteredSelectedRowModel().rows);
-                table.resetRowSelection();
-              }
-            }}
-          >
-            <Trash className="mr-2 size-4" />
-            Delete ({table.getFilteredSelectedRowModel().rows.length})
-          </Button>
+                if (ok) {
+                  onDelete(table.getFilteredSelectedRowModel().rows);
+                  table.resetRowSelection();
+                }
+              }}
+            >
+              <Trash className="mr-2 size-4" />
+              Delete ({table.getFilteredSelectedRowModel().rows.length})
+            </Button>
+            <Button
+              disabled={disabled}
+              size="sm"
+              variant="outline"
+              className="text-xs font-normal"
+              onClick={handleDownloadCSV}
+            >
+              <Download className="mr-2 size-4" />
+              Download CSV
+            </Button>
+          </div>
         )}
       </div>
 
