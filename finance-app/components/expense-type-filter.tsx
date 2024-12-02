@@ -10,31 +10,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
-import { useGetSummary } from "@/features/summary/api/use-get-summary";
 
-export const AccountFilter = () => {
+export const ExpenseTypeFilter = () => {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const { isLoading: isLoadingSummary } = useGetSummary();
-
   const accountId = searchParams.get("accountId") || "all";
+  const type = searchParams.get("type") || undefined;
   const from = searchParams.get("from") || "";
   const to = searchParams.get("to") || "";
-
-  const type = searchParams.get("type") || "";
-
+  console.log("pathname", pathname);
   const onChange = (newValue: string) => {
     const query = {
-      accountId: newValue,
+      accountId,
       from,
       to,
-      type,
+      type: newValue,
     };
 
-    if (newValue === "all") query.accountId = "";
+    if (newValue === "all") query.type = "";
 
     const url = qs.stringifyUrl(
       {
@@ -47,23 +41,20 @@ export const AccountFilter = () => {
     router.push(url);
   };
 
-  const { data: accounts, isLoading: isLoadingAccounts } = useGetAccounts();
+  const formData = [
+    { key: 1, value: "Expenses" },
+    { key: 2, value: "Income" },
+  ];
   return (
-    <Select
-      value={accountId}
-      onValueChange={onChange}
-      disabled={isLoadingAccounts || isLoadingSummary}
-    >
+    <Select value={type} onValueChange={onChange} disabled={pathname === "/"}>
       <SelectTrigger className="h-9 w-full rounded-md border-none bg-white/10 px-3 font-normal text-white outline-none transition hover:bg-white/30 hover:text-white focus:bg-white/30 focus:ring-transparent focus:ring-offset-0 lg:w-auto">
-        <SelectValue placeholder="Select account" />
+        <SelectValue placeholder="Select Expense" />
       </SelectTrigger>
-
       <SelectContent>
-        <SelectItem value="all">All accounts</SelectItem>
-
-        {accounts?.map((account) => (
-          <SelectItem key={account.id} value={account.id}>
-            {account.name}
+        <SelectItem value="all">None</SelectItem>
+        {formData?.map((formData) => (
+          <SelectItem key={formData.key} value={formData.value}>
+            {formData.value}
           </SelectItem>
         ))}
       </SelectContent>

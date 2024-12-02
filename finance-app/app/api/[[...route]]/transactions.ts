@@ -61,8 +61,8 @@ const app = new Hono()
         .where(
           and(
             accountId ? eq(transactions.accountId, accountId) : undefined,
-            type === "expenses" ? lte(transactions.amount, 0) : undefined,
-            type === "income" ? gte(transactions.amount, 0) : undefined,
+            type === "Expenses" ? lte(transactions.amount, 0) : undefined,
+            type === "Income" ? gte(transactions.amount, 0) : undefined,
             eq(accounts.userId, auth.userId),
             gte(transactions.date, startDate),
             lte(transactions.date, endDate)
@@ -79,12 +79,13 @@ const app = new Hono()
       "param",
       z.object({
         id: z.string().optional(),
+        type: z.string().optional(),
       })
     ),
     clerkMiddleware(),
     async (ctx) => {
       const auth = getAuth(ctx);
-      const { id } = ctx.req.valid("param");
+      const { id, type } = ctx.req.valid("param");
 
       if (!id) {
         return ctx.json({ error: "Missing id." }, 400);
@@ -106,7 +107,14 @@ const app = new Hono()
         })
         .from(transactions)
         .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId)));
+        .where(
+          and(
+            type === "Expenses" ? lte(transactions.amount, 0) : undefined,
+            type === "Income" ? gte(transactions.amount, 0) : undefined,
+            eq(transactions.id, id),
+            eq(accounts.userId, auth.userId)
+          )
+        );
 
       if (!data) {
         return ctx.json({ error: "Not found." }, 404);
