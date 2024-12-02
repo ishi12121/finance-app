@@ -10,12 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useGetTransactions } from "@/features/transactions/api/use-get-transactions";
 
 export const ExpenseTypeFilter = () => {
+  const { refetch } = useGetTransactions();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const accountId = searchParams.get("accountId") || "all";
+  const accountId = searchParams.get("accountId") || "";
   const type = searchParams.get("type") || undefined;
   const from = searchParams.get("from") || "";
   const to = searchParams.get("to") || "";
@@ -37,8 +39,10 @@ export const ExpenseTypeFilter = () => {
       },
       { skipNull: true, skipEmptyString: true }
     );
-
     router.push(url);
+    setTimeout(() => {
+      refetch();
+    }, 1000);
   };
 
   const formData = [
