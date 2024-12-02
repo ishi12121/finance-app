@@ -51,6 +51,7 @@ type DataCardProps = BoxVariants &
     value?: number;
     dateRange: string;
     percentageChange?: number;
+    onClick?: () => void;
   };
 
 export const DataCard = ({
@@ -60,9 +61,10 @@ export const DataCard = ({
   icon: Icon,
   variant,
   dateRange,
+  onClick,
 }: DataCardProps) => {
   return (
-    <Card className="border-none drop-shadow-sm">
+    <Card onClick={onClick} className="border-none drop-shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between gap-x-4">
         <div className="space-y-2">
           <CardTitle className="line-clamp-1 text-2xl">{title}</CardTitle>

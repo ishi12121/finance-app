@@ -9,7 +9,7 @@ export const useGetTransactions = () => {
   const from = searchParams.get("from") || "";
   const to = searchParams.get("to") || "";
   const accountId = searchParams.get("accountId") || "";
-
+  const type = searchParams.get("type") || "";
   const query = useQuery({
     queryKey: ["transactions", { from, to, accountId }],
     queryFn: async () => {
@@ -18,6 +18,7 @@ export const useGetTransactions = () => {
           from,
           to,
           accountId,
+          type,
         },
       });
 

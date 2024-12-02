@@ -23,12 +23,13 @@ const app = new Hono()
         from: z.string().optional(),
         to: z.string().optional(),
         accountId: z.string().optional(),
+        type: z.string().optional(),
       })
     ),
     clerkMiddleware(),
     async (ctx) => {
       const auth = getAuth(ctx);
-      const { from, to, accountId } = ctx.req.valid("query");
+      const { from, to, accountId, type } = ctx.req.valid("query");
 
       if (!auth?.userId) {
         return ctx.json({ error: "Unauthorized." }, 401);
@@ -60,6 +61,8 @@ const app = new Hono()
         .where(
           and(
             accountId ? eq(transactions.accountId, accountId) : undefined,
+            type === "expenses" ? lte(transactions.amount, 0) : undefined,
+            type === "income" ? gte(transactions.amount, 0) : undefined,
             eq(accounts.userId, auth.userId),
             gte(transactions.date, startDate),
             lte(transactions.date, endDate)

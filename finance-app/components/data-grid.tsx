@@ -1,20 +1,19 @@
 "use client";
-
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FaPiggyBank } from "react-icons/fa";
 import { FaArrowTrendUp, FaArrowTrendDown } from "react-icons/fa6";
 
 import { useGetSummary } from "@/features/summary/api/use-get-summary";
 import { formatDateRange } from "@/lib/utils";
-
 import { DataCard, DataCardLoading } from "./data-card";
+import { subDays } from "date-fns";
 
 export const DataGrid = () => {
   const { data, isLoading } = useGetSummary();
   const searchParams = useSearchParams();
   const to = searchParams.get("to") || undefined;
   const from = searchParams.get("from") || undefined;
-
+  const navigate = useRouter();
   const dateRangeLabel = formatDateRange({ to, from });
 
   if (isLoading)
@@ -44,6 +43,11 @@ export const DataGrid = () => {
         icon={FaArrowTrendUp}
         variant="success"
         dateRange={dateRangeLabel}
+        onClick={() =>
+          navigate.push(
+            `/transactions?from=${subDays(new Date(), 30).toISOString().split("T")[0]}&to=${new Date().toISOString().split("T")[0]}&type=income`
+          )
+        }
       />
 
       <DataCard
@@ -53,6 +57,11 @@ export const DataGrid = () => {
         icon={FaArrowTrendDown}
         variant="danger"
         dateRange={dateRangeLabel}
+        onClick={() =>
+          navigate.push(
+            `/transactions?from=${subDays(new Date(), 30).toISOString().split("T")[0]}&to=${new Date().toISOString().split("T")[0]}&type=expenses`
+          )
+        }
       />
     </div>
   );
