@@ -529,6 +529,121 @@ const isFinanceRelated = (
   return { isRelevant: false, confidence: 0.8 };
 };
 
+// Enhanced SQL extraction and cleaning function
+const extractSQLQuery = (response: string): string => {
+  let sqlQuery = response.trim();
+
+  // Remove markdown code blocks
+  sqlQuery = sqlQuery.replace(/^```sql\s*/i, "");
+  sqlQuery = sqlQuery.replace(/^```\s*/i, "");
+  sqlQuery = sqlQuery.replace(/\s*```$/i, "");
+  sqlQuery = sqlQuery.trim();
+
+  // Extract only the FIRST SQL query if multiple are present
+  const sqlStatements = sqlQuery.split(/(?=\bSELECT\b)/i);
+  if (sqlStatements.length > 0 && sqlStatements[0].trim()) {
+    // If the first part doesn't start with SELECT, check the second
+    if (
+      !sqlStatements[0].trim().toLowerCase().startsWith("select") &&
+      sqlStatements.length > 1
+    ) {
+      sqlQuery = sqlStatements[1].trim();
+    } else {
+      sqlQuery = sqlStatements[0].trim();
+    }
+
+    // Remove any trailing text after the query
+    // Look for common patterns that indicate end of SQL
+    const endPatterns = [
+      /\n(?![\s]*(?:FROM|WHERE|JOIN|GROUP|ORDER|HAVING|LIMIT|OFFSET|UNION|INTERSECT|EXCEPT))/i,
+      /;.*/,
+      /\)\s*\n.*/,
+    ];
+
+    for (const pattern of endPatterns) {
+      const match = sqlQuery.match(pattern);
+      if (match && match.index) {
+        sqlQuery = sqlQuery.substring(0, match.index);
+        break;
+      }
+    }
+  }
+
+  // Extract SQL from potential explanation text
+  const sqlMatch = sqlQuery.match(/^(SELECT[^;]+(?:;|$))/i);
+  if (sqlMatch) {
+    sqlQuery = sqlMatch[1].replace(/;$/, ""); // Remove trailing semicolon if present
+  } else {
+    // If no SELECT statement found, try to extract until the first newline
+    const lines = sqlQuery.split("\n");
+    if (lines[0].toLowerCase().startsWith("select")) {
+      sqlQuery = lines[0];
+    }
+  }
+
+  // NEW: Fix duplicate WHERE clauses
+  // Check if there are multiple WHERE clauses after ORDER BY
+  const orderByIndex = sqlQuery.toLowerCase().lastIndexOf("order by");
+  if (orderByIndex > -1) {
+    const afterOrderBy = sqlQuery.substring(orderByIndex);
+    const whereInOrderBy = afterOrderBy.toLowerCase().indexOf("where");
+    if (whereInOrderBy > -1) {
+      // Remove the duplicate WHERE clause after ORDER BY
+      sqlQuery = sqlQuery.substring(0, orderByIndex + whereInOrderBy);
+    }
+  }
+
+  // NEW: Ensure WHERE clauses are properly positioned
+  // SQL clause order should be: SELECT ... FROM ... JOIN ... WHERE ... GROUP BY ... ORDER BY ... LIMIT
+  const clauses = {
+    select: sqlQuery.match(/^SELECT\s+.*?(?=FROM)/is)?.[0] || "",
+    from:
+      sqlQuery.match(
+        /FROM\s+.*?(?=(?:JOIN|WHERE|GROUP|ORDER|LIMIT|$))/is
+      )?.[0] || "",
+    join:
+      sqlQuery.match(
+        /((?:INNER\s+|LEFT\s+|RIGHT\s+|FULL\s+)?JOIN\s+.*?(?=(?:JOIN|WHERE|GROUP|ORDER|LIMIT|$)))+/gis
+      )?.[0] || "",
+    where:
+      sqlQuery.match(/WHERE\s+.*?(?=(?:GROUP|ORDER|LIMIT|$))/is)?.[0] || "",
+    groupBy:
+      sqlQuery.match(/GROUP\s+BY\s+.*?(?=(?:ORDER|LIMIT|$))/is)?.[0] || "",
+    orderBy: sqlQuery.match(/ORDER\s+BY\s+.*?(?=(?:LIMIT|$))/is)?.[0] || "",
+    limit: sqlQuery.match(/LIMIT\s+\d+/is)?.[0] || "",
+  };
+
+  // Reconstruct the query in proper order
+  sqlQuery = [
+    clauses.select,
+    clauses.from,
+    clauses.join,
+    clauses.where,
+    clauses.groupBy,
+    clauses.orderBy,
+    clauses.limit,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  // Final validation
+  if (!sqlQuery.toLowerCase().startsWith("select")) {
+    throw new Error("Invalid query format - must start with SELECT");
+  }
+
+  // Ensure no multiple queries
+  if (sqlQuery.toLowerCase().split("select").length > 2) {
+    // Take only up to the start of the second SELECT
+    const secondSelectIndex = sqlQuery.toLowerCase().indexOf("select", 6);
+    if (secondSelectIndex > 0) {
+      sqlQuery = sqlQuery.substring(0, secondSelectIndex).trim();
+    }
+  }
+
+  return sqlQuery;
+};
+
 const executeSafeQuery = async (query: string, userId: string) => {
   let cleanQuery = query.trim();
   cleanQuery = cleanQuery.replace(/^```sql\s*/i, "");
@@ -659,7 +774,7 @@ const app = new Hono()
           messageHistory = ensureAlternatingMessages(messageHistory);
         }
 
-        // Build messages array for API
+        // Build messages array for API with improved system prompt
         const apiMessages = [
           {
             role: "system",
@@ -670,22 +785,29 @@ TABLES:
 - categories (id, name, user_id)
 - transactions (id, amount, payee, notes, date, account_id, category_id)
 
-IMPORTANT RULES:
-1. ONLY generate SELECT queries
+CRITICAL REQUIREMENTS:
+1. Generate EXACTLY ONE SELECT query - never multiple queries
 2. ALWAYS include WHERE clause with user_id = '${auth.userId}'
-3. When joining tables, ensure proper user_id filters on all tables
+3. When joining tables, ensure proper user_id filters on ALL joined tables
 4. Amount is stored in cents (integer), divide by 100 for dollars
-5. Use proper PostgreSQL syntax
-6. DO NOT include markdown formatting, backticks, or code blocks
-7. Return ONLY the raw SQL query text
+5. Use proper PostgreSQL syntax with correct clause order: SELECT ... FROM ... JOIN ... WHERE ... GROUP BY ... ORDER BY ... LIMIT
+6. NEVER duplicate WHERE clauses
+7. DO NOT include markdown formatting, backticks, or code blocks
+8. Return ONLY the raw SQL query text - no explanations
+9. Never include semicolons at the end
+10. Response must be a single line with no line breaks
+
+IMPORTANT SQL RULES:
+- WHERE clause comes AFTER all JOINs and BEFORE GROUP BY
+- Only ONE WHERE clause per query
+- When joining multiple tables, put all conditions in a single WHERE clause using AND
+- For transactions table, join accounts table and filter: WHERE a.user_id = '${auth.userId}'
+- For categories table when joined, add: AND c.user_id = '${auth.userId}'
 
 Example queries:
-- Total spending: SELECT SUM(t.amount)/100.0 as total_expenses FROM transactions t JOIN accounts a ON t.account_id = a.id WHERE a.user_id = '${auth.userId}' AND t.amount < 0
-- Total income: SELECT SUM(t.amount)/100.0 as total_income FROM transactions t JOIN accounts a ON t.account_id = a.id WHERE a.user_id = '${auth.userId}' AND t.amount > 0
-- Account count: SELECT COUNT(*) as account_count FROM accounts WHERE user_id = '${auth.userId}'
-- Recent transactions: SELECT t.id, t.payee, t.amount/100.0 as amount, t.date, a.name as account_name FROM transactions t JOIN accounts a ON t.account_id = a.id WHERE a.user_id = '${auth.userId}' ORDER BY t.date DESC LIMIT 10
+- Expenses by category: SELECT c.name as category, SUM(t.amount)/100.0 as total FROM transactions t JOIN accounts a ON t.account_id = a.id JOIN categories c ON t.category_id = c.id WHERE a.user_id = '${auth.userId}' AND c.user_id = '${auth.userId}' AND t.amount < 0 GROUP BY c.name ORDER BY total DESC
 
-Return ONLY the SQL query without any formatting or markdown.`,
+REMEMBER: Return EXACTLY ONE syntactically correct SQL query.`,
           },
           ...messageHistory,
           {
@@ -752,11 +874,33 @@ Return ONLY the SQL query without any formatting or markdown.`,
         const data = await perplexityResponse.json();
         let sqlQuery = data.choices[0].message.content.trim();
 
-        // Clean the query
-        sqlQuery = sqlQuery.replace(/^```sql\s*/i, "");
-        sqlQuery = sqlQuery.replace(/^```\s*/i, "");
-        sqlQuery = sqlQuery.replace(/\s*```$/i, "");
-        sqlQuery = sqlQuery.trim();
+        // Extract and clean the SQL query
+        try {
+          sqlQuery = extractSQLQuery(sqlQuery);
+        } catch (extractError) {
+          console.error("SQL extraction error:", extractError);
+
+          const aiMessageId = createId();
+          const errorMessage =
+            "I couldn't generate a proper query for your request. Please try rephrasing your question.";
+
+          await db.insert(chatMessages).values({
+            id: aiMessageId,
+            userId: auth.userId,
+            conversationId: currentConversationId,
+            role: "assistant",
+            content: errorMessage,
+            createdAt: new Date(),
+          });
+
+          return ctx.json({
+            data: {
+              response: errorMessage,
+              conversationId: currentConversationId,
+              messageId: aiMessageId,
+            },
+          });
+        }
 
         console.log("Generated SQL query:", sqlQuery);
 
