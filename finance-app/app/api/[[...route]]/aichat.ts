@@ -796,7 +796,7 @@ Return ONLY the SQL query without any formatting or markdown.`,
             content: `You are a friendly financial assistant. Convert database query results into clear, conversational responses.
             
 Guidelines:
-- Format currency with $ symbol and 2 decimal places
+- Format currency with ₹ symbol and 2 decimal places
 - Use clear, simple language
 - Highlight key insights
 - If the result is empty, provide a helpful message
