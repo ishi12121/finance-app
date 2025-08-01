@@ -57,3 +57,14 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
 export const insertTransactionSchema = createInsertSchema(transactions, {
   date: z.coerce.date(),
 });
+
+export const chatMessages = pgTable("chat_messages", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  conversationId: text("conversation_id").notNull(),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages);
