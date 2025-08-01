@@ -2,7 +2,7 @@
 
 import { ChatMessageArea } from "@/components/ui/chat-message-area";
 import { useAuth } from "@clerk/nextjs";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, X, History } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +12,12 @@ interface Message {
   content: string;
   type: "user" | "assistant";
   timestamp: Date;
+}
+
+interface ConversationHistory {
+  conversationId: string;
+  lastMessage: string;
+  createdAt: string;
 }
 
 const ChatApp = () => {
@@ -28,16 +34,18 @@ const ChatApp = () => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationHistory, setConversationHistory] = useState<
+    ConversationHistory[]
+  >([]);
+  const [showHistory, setShowHistory] = useState(false);
   const messageAreaRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (messageAreaRef.current) {
       messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // Load conversations on mount if signed in
   useEffect(() => {
     if (isSignedIn) {
       loadConversations();
@@ -49,12 +57,45 @@ const ChatApp = () => {
       const response = await fetch("/api/aichat/conversations");
       if (response.ok) {
         const data = await response.json();
-        setMessages(data.data);
+        setConversationHistory(data.data);
         console.log("Available conversations:", data.data);
       }
     } catch (error) {
       console.error("Failed to load conversations:", error);
     }
+  };
+
+  const loadConversationMessages = (conversation: ConversationHistory) => {
+    // Convert conversation history to message format
+    const messages: Message[] = [];
+
+    // Parse the conversation data and create messages
+    // Since we only have lastMessage, we'll create a simple conversation view
+    messages.push({
+      id: `${conversation.conversationId}-last`,
+      content: conversation.lastMessage,
+      type: conversation.lastMessage.toLowerCase().includes("tell me")
+        ? "user"
+        : "assistant",
+      timestamp: new Date(conversation.createdAt),
+    });
+
+    setMessages(messages);
+    setConversationId(conversation.conversationId);
+    setShowHistory(false);
+  };
+
+  const startNewConversation = () => {
+    setMessages([
+      {
+        id: "welcome",
+        content: "Welcome to the AI Assistant! How can I help you today?",
+        type: "assistant",
+        timestamp: new Date(),
+      },
+    ]);
+    setConversationId(null);
+    setShowHistory(false);
   };
 
   const getPerplexityResponse = async (
@@ -124,6 +165,9 @@ const ChatApp = () => {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+
+      // Reload conversations to update history
+      loadConversations();
     } catch (error) {
       console.error("Error in chat:", error);
       toast.error("Failed to get AI response. Please try again.");
@@ -175,62 +219,109 @@ const ChatApp = () => {
               <h3 className="text-lg font-semibold">AI Assistant</h3>
               <p className="text-xs opacity-90">Powered by Perplexity AI</p>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="rounded-lg p-1 transition-colors hover:bg-white/20"
-            >
-              <X size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="rounded-lg p-1 transition-colors hover:bg-white/20"
+                title="View conversation history"
+              >
+                <History size={20} />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="rounded-lg p-1 transition-colors hover:bg-white/20"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
-          {/* Chat Messages */}
-          <ChatMessageArea className="flex-1 overflow-y-auto bg-gray-50 p-4">
-            <div ref={messageAreaRef} className="space-y-3">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.type === "user" ? "justify-end" : "justify-start"
-                  }`}
+          {/* Chat Messages or History */}
+          {showHistory ? (
+            <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-gray-700">
+                  Conversation History
+                </h4>
+                <button
+                  onClick={startNewConversation}
+                  className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
                 >
-                  <div className="flex max-w-[80%] items-start gap-2">
-                    {message.type === "assistant" && (
+                  New Chat
+                </button>
+              </div>
+              <div className="space-y-2">
+                {conversationHistory.length === 0 ? (
+                  <p className="text-center text-sm text-gray-500">
+                    No previous conversations
+                  </p>
+                ) : (
+                  conversationHistory.map((conv) => (
+                    <button
+                      key={conv.conversationId}
+                      onClick={() => loadConversationMessages(conv)}
+                      className="w-full rounded-lg border border-gray-200 bg-white p-3 text-left transition-colors hover:bg-gray-50"
+                    >
+                      <p className="line-clamp-2 text-sm text-gray-700">
+                        {conv.lastMessage}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {new Date(conv.createdAt).toLocaleString()}
+                      </p>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          ) : (
+            <ChatMessageArea className="flex-1 overflow-y-auto bg-gray-50 p-4">
+              <div ref={messageAreaRef} className="space-y-3">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${
+                      message.type === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div className="flex max-w-[80%] items-start gap-2">
+                      {message.type === "assistant" && (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600">
+                          <div className="h-4 w-4 rounded-full bg-white" />
+                        </div>
+                      )}
+                      <div
+                        className={`rounded-2xl px-4 py-2.5 ${
+                          message.type === "user"
+                            ? "bg-blue-600 text-white"
+                            : "bg-white text-gray-800 shadow-sm"
+                        }`}
+                      >
+                        <p className="text-sm">{message.content}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Loading indicator */}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="flex items-start gap-2">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600">
                         <div className="h-4 w-4 rounded-full bg-white" />
                       </div>
-                    )}
-                    <div
-                      className={`rounded-2xl px-4 py-2.5 ${
-                        message.type === "user"
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-gray-800 shadow-sm"
-                      }`}
-                    >
-                      <p className="text-sm">{message.content}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Loading indicator */}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex items-start gap-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600">
-                      <div className="h-4 w-4 rounded-full bg-white" />
-                    </div>
-                    <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-                      <div className="flex space-x-1">
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+                      <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                        <div className="flex space-x-1">
+                          <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
+                          <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
+                          <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          </ChatMessageArea>
+                )}
+              </div>
+            </ChatMessageArea>
+          )}
 
           {/* Footer with branding */}
           <div className="border-t bg-gray-50 px-4 py-2">
@@ -258,12 +349,12 @@ const ChatApp = () => {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyPress}
                   placeholder="Chat with AI..."
-                  disabled={isLoading}
+                  disabled={isLoading || showHistory}
                   className="w-full rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 pr-12 text-sm outline-none transition-colors focus:border-blue-400 focus:bg-white disabled:opacity-50"
                 />
                 <button
                   onClick={handleSubmit}
-                  disabled={!inputValue.trim() || isLoading}
+                  disabled={!inputValue.trim() || isLoading || showHistory}
                   className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-400 transition-colors hover:text-blue-600 disabled:opacity-50"
                 >
                   <svg
