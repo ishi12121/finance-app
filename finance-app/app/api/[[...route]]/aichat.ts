@@ -62,404 +62,6 @@ const FINANCIAL_KEYWORDS = [
   "financial",
 ];
 
-const OFF_TOPIC_KEYWORDS = [
-  // Weather & Environment
-  "weather",
-  "temperature",
-  "forecast",
-  "rain",
-  "sunny",
-  "cloudy",
-  "snow",
-  "storm",
-
-  // News & Media
-  "news",
-  "sports",
-  "recipe",
-  "cooking",
-  "movie",
-  "music",
-  "song",
-  "film",
-  "tv show",
-  "netflix",
-  "youtube",
-  "video",
-  "podcast",
-  "radio",
-
-  // Entertainment
-  "joke",
-  "story",
-  "poem",
-  "game",
-  "play",
-  "meme",
-  "funny",
-  "hilarious",
-  "lol",
-  "lmao",
-  "rofl",
-  "comedy",
-  "riddle",
-  "puzzle",
-
-  // Inappropriate/Slang
-  "fuck",
-  "shit",
-  "ass",
-  "damn",
-  "hell",
-  "bitch",
-  "dick",
-  "cock",
-  "pussy",
-  "sex",
-  "porn",
-  "nude",
-  "naked",
-  "boobs",
-  "tits",
-  "penis",
-  "vagina",
-  "horny",
-  "sexy",
-  "hot",
-  "babe",
-  "daddy",
-  "mommy",
-  "kinky",
-  "fetish",
-  "kink",
-
-  // Drug/Alcohol Related
-  "weed",
-  "marijuana",
-  "cocaine",
-  "meth",
-  "drug",
-  "drugs",
-  "high",
-  "stoned",
-  "drunk",
-  "beer",
-  "alcohol",
-  "vodka",
-  "whiskey",
-  "wine",
-  "smoke",
-  "smoking",
-  "vape",
-  "420",
-
-  // Violence/Harmful
-  "kill",
-  "murder",
-  "suicide",
-  "die",
-  "death",
-  "fight",
-  "punch",
-  "kick",
-  "shoot",
-  "gun",
-  "weapon",
-  "bomb",
-  "terrorism",
-  "violence",
-  "hurt",
-  "harm",
-  "attack",
-
-  // Dating/Relationships (non-financial)
-  "date",
-  "dating",
-  "girlfriend",
-  "boyfriend",
-  "love",
-  "crush",
-  "romance",
-  "kiss",
-  "marry",
-  "wedding",
-  "divorce",
-  "breakup",
-  "tinder",
-  "bumble",
-  "hookup",
-
-  // School/Homework
-  "homework",
-  "assignment",
-  "essay",
-  "test",
-  "exam",
-  "quiz",
-  "study",
-  "school",
-  "college",
-  "university",
-  "teacher",
-  "professor",
-  "grade",
-  "gpa",
-
-  // Technical (non-financial)
-  "code",
-  "programming",
-  "javascript",
-  "python",
-  "java",
-  "css",
-  "html",
-  "react",
-  "angular",
-  "vue",
-  "node",
-  "database",
-  "sql",
-  "api",
-  "debug",
-  "compile",
-
-  // Health/Medical
-  "doctor",
-  "hospital",
-  "medicine",
-  "sick",
-  "disease",
-  "symptom",
-  "diagnosis",
-  "treatment",
-  "surgery",
-  "pregnant",
-  "pregnancy",
-  "cancer",
-  "diabetes",
-  "covid",
-
-  // General Misuse
-  "hello",
-  "hi",
-  "hey",
-  "sup",
-  "wassup",
-  "yo",
-  "howdy",
-  "greetings",
-  "who are you",
-  "what are you",
-  "tell me about yourself",
-  "are you real",
-  "are you human",
-  "are you ai",
-  "are you bot",
-  "consciousness",
-  "sentient",
-
-  // Politics/Religion
-  "politics",
-  "election",
-  "president",
-  "government",
-  "democrat",
-  "republican",
-  "religion",
-  "god",
-  "jesus",
-  "allah",
-  "buddha",
-  "hindu",
-  "christian",
-  "muslim",
-  "church",
-  "mosque",
-  "temple",
-  "pray",
-  "prayer",
-
-  // Random/Spam
-  "asdf",
-  "qwerty",
-  "test",
-  "testing",
-  "blah",
-  "whatever",
-  "random",
-  "spam",
-  "gibberish",
-  "nonsense",
-  "garbage",
-  "trash",
-  "stupid",
-  "dumb",
-  "idiot",
-
-  // Attempts to break the system
-  "ignore",
-  "forget",
-  "disregard",
-  "previous",
-  "instruction",
-  "system",
-  "prompt",
-  "jailbreak",
-  "hack",
-  "exploit",
-  "bypass",
-  "override",
-  "admin",
-  "root",
-  "sudo",
-
-  // Crypto/Trading (if you want to exclude these)
-  "bitcoin",
-  "crypto",
-  "cryptocurrency",
-  "nft",
-  "ethereum",
-  "dogecoin",
-  "trading",
-  "forex",
-  "stocks",
-  "shares",
-  "investment advice",
-  "pump",
-  "dump",
-
-  // Gaming
-  "fortnite",
-  "minecraft",
-  "roblox",
-  "valorant",
-  "league",
-  "csgo",
-  "pubg",
-  "gaming",
-  "xbox",
-  "playstation",
-  "nintendo",
-  "steam",
-  "epic games",
-
-  // Social Media
-  "instagram",
-  "facebook",
-  "twitter",
-  "tiktok",
-  "snapchat",
-  "whatsapp",
-  "discord",
-  "telegram",
-  "reddit",
-  "linkedin",
-  "pinterest",
-
-  // Food (non-financial)
-  "pizza",
-  "burger",
-  "pasta",
-  "sushi",
-  "coffee",
-  "tea",
-  "restaurant",
-  "food delivery",
-  "uber eats",
-  "doordash",
-  "grubhub",
-
-  // Travel (non-financial context)
-  "vacation",
-  "holiday",
-  "travel",
-  "flight",
-  "hotel",
-  "airbnb",
-  "tourism",
-  "passport",
-  "visa",
-  "country",
-  "city",
-  "beach",
-  "mountain",
-
-  // Slang and Internet Terms
-  "bruh",
-  "fam",
-  "lit",
-  "fire",
-  "cap",
-  "no cap",
-  "bussin",
-  "sheesh",
-  "slay",
-  "queen",
-  "king",
-  "stan",
-  "simp",
-  "chad",
-  "based",
-  "cringe",
-  "sus",
-  "poggers",
-  "yeet",
-  "oof",
-  "rip",
-  "f",
-  "gg",
-  "ez",
-  "noob",
-  "pwn",
-  "rekt",
-  "salty",
-  "toxic",
-  "troll",
-  "karen",
-  "boomer",
-  "zoomer",
-  "millennial",
-];
-
-// You might also want to add a function to check for patterns
-const containsInappropriatePatterns = (message: string): boolean => {
-  const lowerMessage = message.toLowerCase();
-
-  // Check for repetitive characters (like "hiiiii" or "hellloooo")
-  if (/(.)\1{4,}/.test(lowerMessage)) {
-    return true;
-  }
-
-  // Check for all caps shouting (more than 5 words in caps)
-  const words = message.split(" ");
-  const capsWords = words.filter(
-    (word) => word.length > 2 && word === word.toUpperCase()
-  );
-  if (capsWords.length > 5) {
-    return true;
-  }
-
-  // Check for excessive punctuation
-  if (/[!?]{3,}/.test(message)) {
-    return true;
-  }
-
-  // Check for leetspeak variations
-  const leetPatterns = [
-    /p0rn/i,
-    /s3x/i,
-    /dr4g/i,
-    /w33d/i,
-    /h4ck/i,
-    /f\*ck/i,
-    /sh\*t/i,
-    /b\*tch/i,
-    /a\$\$/i,
-  ];
-
-  return leetPatterns.some((pattern) => pattern.test(lowerMessage));
-};
-
 // Function to ensure proper message alternation
 const ensureAlternatingMessages = (
   messages: { role: string; content: string }[]
@@ -491,20 +93,6 @@ const isFinanceRelated = (
   message: string
 ): { isRelevant: boolean; confidence: number } => {
   const lowerMessage = message.toLowerCase();
-
-  // First check for inappropriate patterns
-  if (containsInappropriatePatterns(message)) {
-    return { isRelevant: false, confidence: 0.95 };
-  }
-
-  // Check for off-topic keywords
-  const hasOffTopicKeyword = OFF_TOPIC_KEYWORDS.some((keyword) =>
-    lowerMessage.includes(keyword)
-  );
-
-  if (hasOffTopicKeyword) {
-    return { isRelevant: false, confidence: 0.9 };
-  }
 
   // Rest of your existing logic...
   const financialKeywordCount = FINANCIAL_KEYWORDS.filter((keyword) =>
@@ -682,7 +270,6 @@ const executeSafeQuery = async (query: string, userId: string) => {
     const result = await db.execute(sql.raw(cleanQuery));
     return result;
   } catch (error) {
-    console.error("Query execution error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
     throw new Error(`Query execution failed: ${errorMessage}`);
@@ -703,7 +290,6 @@ const app = new Hono()
     async (ctx) => {
       const auth = getAuth(ctx);
       const { message, conversationId } = ctx.req.valid("json");
-
       if (!auth?.userId) {
         return ctx.json({ error: "Unauthorized." }, 401);
       }
@@ -816,15 +402,6 @@ REMEMBER: Return EXACTLY ONE syntactically correct SQL query.`,
           },
         ];
 
-        // Log the messages to debug
-        console.log(
-          "API Messages:",
-          apiMessages.map((m) => ({
-            role: m.role,
-            contentLength: m.content.length,
-          }))
-        );
-
         // Continue with AI processing
         const perplexityResponse = await fetch(
           process.env.NEXT_PERPLEXITY_AI_URL!,
@@ -843,12 +420,7 @@ REMEMBER: Return EXACTLY ONE syntactically correct SQL query.`,
             }),
           }
         );
-
         if (!perplexityResponse.ok) {
-          const error = await perplexityResponse.json();
-          console.error("Perplexity API error:", error);
-
-          // Fallback response
           const aiMessageId = createId();
           const errorMessage =
             "I'm having trouble processing your request. Please try asking your question again.";
@@ -878,8 +450,6 @@ REMEMBER: Return EXACTLY ONE syntactically correct SQL query.`,
         try {
           sqlQuery = extractSQLQuery(sqlQuery);
         } catch (extractError) {
-          console.error("SQL extraction error:", extractError);
-
           const aiMessageId = createId();
           const errorMessage =
             "I couldn't generate a proper query for your request. Please try rephrasing your question.";
@@ -901,16 +471,12 @@ REMEMBER: Return EXACTLY ONE syntactically correct SQL query.`,
             },
           });
         }
-
-        console.log("Generated SQL query:", sqlQuery);
-
         // Execute the SQL query safely
         let queryResult;
         try {
           queryResult = await executeSafeQuery(sqlQuery, auth.userId);
+          console.log("Query executed successfully:", queryResult);
         } catch (error) {
-          console.error("SQL execution error:", error);
-
           const aiMessageId = createId();
           const errorMessage =
             "I encountered an error while fetching your data. Please try rephrasing your question.";
@@ -940,7 +506,7 @@ REMEMBER: Return EXACTLY ONE syntactically correct SQL query.`,
             content: `You are a friendly financial assistant. Convert database query results into clear, conversational responses.
             
 Guidelines:
-- Format currency with ₹ symbol and 2 decimal places
+- Format currency with ₹ symbol and divide amounts by 10.
 - Use clear, simple language
 - Highlight key insights
 - If the result is empty, provide a helpful message
@@ -976,7 +542,6 @@ Provide a natural, helpful response based on this data.`,
 
         if (!transformResponse.ok) {
           const error = await transformResponse.json();
-          console.error("Transform API error:", error);
 
           const fallbackResponse = `I found ${queryResult.rows.length} result(s) for your query. ${JSON.stringify(queryResult.rows[0])}`;
 
@@ -1020,7 +585,6 @@ Provide a natural, helpful response based on this data.`,
           },
         });
       } catch (error) {
-        console.error("Chat API error:", error);
         return ctx.json({ error: "Internal server error" }, 500);
       }
     }
