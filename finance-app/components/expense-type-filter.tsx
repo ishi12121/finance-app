@@ -11,9 +11,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGetTransactions } from "@/features/transactions/api/use-get-transactions";
+import { useEffect } from "react";
 
 export const ExpenseTypeFilter = () => {
   const { refetch } = useGetTransactions();
+
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,17 +23,14 @@ export const ExpenseTypeFilter = () => {
   const type = searchParams.get("type") || undefined;
   const from = searchParams.get("from") || "";
   const to = searchParams.get("to") || "";
-  console.log("pathname", pathname);
-  const onChange = (newValue: string) => {
+
+  const onChange = (newType: string) => {
     const query = {
       accountId,
       from,
       to,
-      type: newValue,
+      type: newType === "all" ? undefined : newType,
     };
-
-    if (newValue === "all") query.type = "";
-
     const url = qs.stringifyUrl(
       {
         url: pathname,
@@ -40,15 +39,16 @@ export const ExpenseTypeFilter = () => {
       { skipNull: true, skipEmptyString: true }
     );
     router.push(url);
-    setTimeout(() => {
-      refetch();
-    }, 1000);
+    refetch();
   };
 
   const formData = [
     { key: 1, value: "Expenses" },
     { key: 2, value: "Income" },
   ];
+  useEffect(() => {
+    refetch();
+  }, [accountId, type, from, to, refetch]);
   return (
     <Select value={type} onValueChange={onChange} disabled={pathname === "/"}>
       <SelectTrigger className="h-9 w-full rounded-md border-none bg-white/10 px-3 font-normal text-white outline-none transition hover:bg-white/30 hover:text-white focus:bg-white/30 focus:ring-transparent focus:ring-offset-0 lg:w-auto">

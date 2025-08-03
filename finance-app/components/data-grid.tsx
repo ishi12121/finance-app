@@ -45,7 +45,7 @@ export const DataGrid = () => {
         dateRange={dateRangeLabel}
         onClick={() =>
           navigate.push(
-            `/transactions?from=${subDays(new Date(), 30).toISOString().split("T")[0]}&to=${new Date().toISOString().split("T")[0]}&type=income`
+            `/transactions?from=${subDays(new Date(), 30).toISOString().split("T")[0]}&to=${new Date().toISOString().split("T")[0]}&type=Income`
           )
         }
       />
@@ -59,7 +59,7 @@ export const DataGrid = () => {
         dateRange={dateRangeLabel}
         onClick={() =>
           navigate.push(
-            `/transactions?from=${subDays(new Date(), 30).toISOString().split("T")[0]}&to=${new Date().toISOString().split("T")[0]}&type=expenses`
+            `/transactions?from=${subDays(new Date(), 30).toISOString().split("T")[0]}&to=${new Date().toISOString().split("T")[0]}&type=Expenses`
           )
         }
       />
